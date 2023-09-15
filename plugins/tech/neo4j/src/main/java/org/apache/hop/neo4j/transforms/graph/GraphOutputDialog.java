@@ -88,6 +88,7 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
   private TextVar wReturnGraphField;
   private Button wValidateAgainstModel;
   private Button wOutOfOrderAllowed;
+  private Button wKeepNullProperties;
 
   private CTabFolder wTabFolder;
   private TableView wFieldMappings;
@@ -270,8 +271,9 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
 
     Label wlValidateAgainstModel = new Label(shell, SWT.RIGHT);
     wlValidateAgainstModel.setText("Validate against model?");
-    wlValidateAgainstModel.setToolTipText(
-        "This validates indexes, constraints and properties as specified in the model");
+    String ValidateAgainstModelTooltipText =
+        "This validates indexes, constraints and properties as specified in the model";
+    wlValidateAgainstModel.setToolTipText(ValidateAgainstModelTooltipText);
     PropsUi.setLook(wlValidateAgainstModel);
     FormData fdlValidateAgainstModel = new FormData();
     fdlValidateAgainstModel.left = new FormAttachment(0, 0);
@@ -279,7 +281,7 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
     fdlValidateAgainstModel.top = new FormAttachment(lastControl, 2 * margin);
     wlValidateAgainstModel.setLayoutData(fdlValidateAgainstModel);
     wValidateAgainstModel = new Button(shell, SWT.CHECK | SWT.BORDER);
-    wValidateAgainstModel.setToolTipText(returnGraphTooltipText);
+    wValidateAgainstModel.setToolTipText(ValidateAgainstModelTooltipText);
     PropsUi.setLook(wValidateAgainstModel);
     FormData fdValidateAgainstModel = new FormData();
     fdValidateAgainstModel.left = new FormAttachment(middle, 0);
@@ -291,8 +293,9 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
 
     Label wlOutOfOrderAllowed = new Label(shell, SWT.RIGHT);
     wlOutOfOrderAllowed.setText("Allow out of order updates?");
-    wlOutOfOrderAllowed.setToolTipText(
-        "The transform can group similar cypher statements to increase performance.");
+    String outOfOrderAllowedTooltipText =
+        "The transform can group similar cypher statements to increase performance.";
+    wlOutOfOrderAllowed.setToolTipText(outOfOrderAllowedTooltipText);
     PropsUi.setLook(wlOutOfOrderAllowed);
     FormData fdlOutOfOrderAllowed = new FormData();
     fdlOutOfOrderAllowed.left = new FormAttachment(0, 0);
@@ -300,7 +303,7 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
     fdlOutOfOrderAllowed.top = new FormAttachment(lastControl, 2 * margin);
     wlOutOfOrderAllowed.setLayoutData(fdlOutOfOrderAllowed);
     wOutOfOrderAllowed = new Button(shell, SWT.CHECK | SWT.BORDER);
-    wOutOfOrderAllowed.setToolTipText(returnGraphTooltipText);
+    wOutOfOrderAllowed.setToolTipText(outOfOrderAllowedTooltipText);
     PropsUi.setLook(wOutOfOrderAllowed);
     FormData fdOutOfOrderAllowed = new FormData();
     fdOutOfOrderAllowed.left = new FormAttachment(middle, 0);
@@ -308,6 +311,27 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
     fdOutOfOrderAllowed.top = new FormAttachment(wlOutOfOrderAllowed, 0, SWT.CENTER);
     wOutOfOrderAllowed.setLayoutData(fdOutOfOrderAllowed);
     lastControl = wlOutOfOrderAllowed;
+
+    Label wlKeepNullProperties = new Label(shell, SWT.RIGHT);
+    String keepNullPropertiesTooltipText =
+        "The transform can keep null attributes instead of removing them.";
+    wlKeepNullProperties.setText("Keep null properties?");
+    wlKeepNullProperties.setToolTipText(keepNullPropertiesTooltipText);
+    PropsUi.setLook(wlKeepNullProperties);
+    FormData fdlKeepNullProperties = new FormData();
+    fdlKeepNullProperties.left = new FormAttachment(0, 0);
+    fdlKeepNullProperties.right = new FormAttachment(middle, -margin);
+    fdlKeepNullProperties.top = new FormAttachment(lastControl, 2 * margin);
+    wlKeepNullProperties.setLayoutData(fdlKeepNullProperties);
+    wKeepNullProperties = new Button(shell, SWT.CHECK | SWT.BORDER);
+    wKeepNullProperties.setToolTipText(keepNullPropertiesTooltipText);
+    PropsUi.setLook(wKeepNullProperties);
+    FormData fdKeepNullProperties = new FormData();
+    fdKeepNullProperties.left = new FormAttachment(middle, 0);
+    fdKeepNullProperties.right = new FormAttachment(100, 0);
+    fdKeepNullProperties.top = new FormAttachment(wlKeepNullProperties, 0, SWT.CENTER);
+    wKeepNullProperties.setLayoutData(fdKeepNullProperties);
+    lastControl = wlKeepNullProperties;
 
     // Some buttons at the bottom...
     //
@@ -757,6 +781,7 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
 
     wValidateAgainstModel.setSelection(input.isValidatingAgainstModel());
     wOutOfOrderAllowed.setSelection(input.isOutOfOrderAllowed());
+    wKeepNullProperties.setSelection(input.isKeepNullProperties());
 
     try {
       loadActiveModel();
@@ -783,6 +808,7 @@ public class GraphOutputDialog extends BaseTransformDialog implements ITransform
 
     input.setValidatingAgainstModel(wValidateAgainstModel.getSelection());
     input.setOutOfOrderAllowed(wOutOfOrderAllowed.getSelection());
+    input.setKeepNullProperties(wKeepNullProperties.getSelection());
 
     List<FieldModelMapping> mappings = new ArrayList<>();
     for (TableItem item : wFieldMappings.getNonEmptyItems()) {

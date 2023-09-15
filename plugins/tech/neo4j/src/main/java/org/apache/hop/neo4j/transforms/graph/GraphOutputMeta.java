@@ -90,6 +90,12 @@ public class GraphOutputMeta extends BaseTransformMeta<GraphOutput, GraphOutputD
   private boolean outOfOrderAllowed;
 
   @HopMetadataProperty(
+      key = "keep_null_properties",
+      injectionKey = "keep_null_properties",
+      injectionKeyDescription = "GraphOutput.Injection.KEEP_NULL_PROPERTIES")
+  private boolean keepNullProperties;
+
+  @HopMetadataProperty(
       groupKey = "mappings",
       key = "mapping",
       injectionGroupKey = "mappings",
@@ -121,6 +127,7 @@ public class GraphOutputMeta extends BaseTransformMeta<GraphOutput, GraphOutputD
     nodeMappings = new ArrayList<>();
     creatingIndexes = false;
     outOfOrderAllowed = true;
+    keepNullProperties = false;
   }
 
   @Override
@@ -273,6 +280,20 @@ public class GraphOutputMeta extends BaseTransformMeta<GraphOutput, GraphOutputD
   /** @param outOfOrderAllowed The outOfOrderAllowed to set */
   public void setOutOfOrderAllowed(boolean outOfOrderAllowed) {
     this.outOfOrderAllowed = outOfOrderAllowed;
+  }
+
+  /**
+   * Gets keepNullProperties
+   *
+   * @return value of keepNullProperties
+   */
+  public boolean isKeepNullProperties() {
+    return keepNullProperties;
+  }
+
+  /** @param keepNullProperties The keepNullProperties to set */
+  public void setKeepNullProperties(boolean keepNullProperties) {
+    this.keepNullProperties = keepNullProperties;
   }
 
   /**

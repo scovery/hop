@@ -1614,12 +1614,14 @@ public class GraphOutput extends BaseNeoTransform<GraphOutputMeta, GraphOutputDa
           }
         }
 
-        if (!isNull) {
+        if (meta.isKeepNullProperties() || !isNull) {
           GraphPropertyData propertyData = new GraphPropertyData();
           propertyData.setId(napd.property.getName());
           GraphPropertyDataType type = GraphPropertyDataType.getTypeFromHop(napd.sourceValueMeta);
           propertyData.setType(type);
-          propertyData.setValue(type.convertFromHop(napd.sourceValueMeta, napd.sourceValueData));
+          if (!isNull) {
+            propertyData.setValue(type.convertFromHop(napd.sourceValueMeta, napd.sourceValueData));
+          }
           propertyData.setPrimary(napd.property.isPrimary());
 
           graphNodeData.getProperties().add(propertyData);
