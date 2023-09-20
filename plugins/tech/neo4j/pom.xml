@@ -44,6 +44,7 @@
 
     <properties>
         <neo4j.driver.version>4.4.12</neo4j.driver.version>
+        <zstandard.version>1.24.0</zstandard.version>
     </properties>
 
     <repositories>
@@ -73,6 +74,13 @@
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
             <version>${neo4j.driver.version}</version>
+        </dependency>
+
+        <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+            <version>${zstandard.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -125,6 +133,5 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 </project>

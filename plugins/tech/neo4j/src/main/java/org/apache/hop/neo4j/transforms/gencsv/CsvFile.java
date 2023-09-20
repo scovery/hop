@@ -20,12 +20,15 @@ package org.apache.hop.neo4j.transforms.gencsv;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 
 public class CsvFile {
 
@@ -35,6 +38,8 @@ public class CsvFile {
 
   private String fileType;
 
+  private CompressionFormat compression;
+
   @SuppressWarnings("java:S2065") // disable sonar warning on transient
   private transient List<IdType> propsList;
 
@@ -42,7 +47,7 @@ public class CsvFile {
   private transient Map<String, Integer> propsIndexes;
 
   @SuppressWarnings("java:S2065") // disable sonar warning on transient
-  private transient FileOutputStream outputStream;
+  private transient OutputStream outputStream;
 
   @SuppressWarnings("java:S2065") // disable sonar warning on transient
   private transient String idFieldName;
@@ -52,15 +57,24 @@ public class CsvFile {
     propsIndexes = new HashMap<>();
   }
 
-  public CsvFile(String filename, String shortFilename, String fileType) {
+  public CsvFile(String filename, String shortFilename, String fileType, CompressionFormat compression) {
     this();
     this.filename = filename;
     this.shortFilename = shortFilename;
     this.fileType = fileType;
+    this.compression = compression;
   }
 
-  public void openFile() throws FileNotFoundException {
-    outputStream = new FileOutputStream(filename);
+  public void openFile() throws IOException {
+    switch (this.compression) {
+      case None:
+       outputStream = new FileOutputStream(filename);
+        break;
+      case Zstd:
+        FileOutputStream internalStream = new FileOutputStream(filename);
+        outputStream = new ZstdCompressorOutputStream(internalStream);
+        break;
+    }
   }
 
   public void closeFile() throws IOException {
@@ -75,12 +89,12 @@ public class CsvFile {
    *
    * @return value of outputStream
    */
-  public FileOutputStream getOutputStream() {
+  public OutputStream getOutputStream() {
     return outputStream;
   }
 
   /** @param outputStream The outputStream to set */
-  public void setOutputStream(FileOutputStream outputStream) {
+  public void setOutputStream(OutputStream outputStream) {
     this.outputStream = outputStream;
   }
 

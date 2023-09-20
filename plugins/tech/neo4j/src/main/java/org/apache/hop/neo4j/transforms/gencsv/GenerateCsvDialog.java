@@ -54,6 +54,7 @@ public class GenerateCsvDialog extends BaseTransformDialog implements ITransform
   private CCombo wGraphField;
   private TextVar wBaseFolder;
   private CCombo wStrategy;
+  private CCombo wCompress;
   private TextVar wFilesPrefix;
   private TextVar wFilenameField;
   private TextVar wFileTypeField;
@@ -216,6 +217,24 @@ public class GenerateCsvDialog extends BaseTransformDialog implements ITransform
     wStrategy.setLayoutData(fdStrategy);
     lastControl = wStrategy;
 
+    Label wlCompress = new Label(wComposite, SWT.RIGHT);
+    wlCompress.setText("Compression type ");
+    PropsUi.setLook(wlCompress);
+    FormData fdlCompress = new FormData();
+    fdlCompress.left = new FormAttachment(0, 0);
+    fdlCompress.right = new FormAttachment(middle, -margin);
+    fdlCompress.top = new FormAttachment(lastControl, 2 * margin);
+    wlCompress.setLayoutData(fdlCompress);
+    wCompress = new CCombo(wComposite, SWT.FLAT | SWT.BORDER);
+    wCompress.setItems(CompressionFormat.getNames());
+    PropsUi.setLook(wCompress);
+    FormData fdCompress = new FormData();
+    fdCompress.left = new FormAttachment(middle, 0);
+    fdCompress.right = new FormAttachment(100, 0);
+    fdCompress.top = new FormAttachment(wlCompress, 0, SWT.CENTER);
+    wCompress.setLayoutData(fdCompress);
+    lastControl = wCompress;
+
     Label wlFilenameField = new Label(wComposite, SWT.RIGHT);
     wlFilenameField.setText("Filename field) ");
     PropsUi.setLook(wlFilenameField);
@@ -300,6 +319,11 @@ public class GenerateCsvDialog extends BaseTransformDialog implements ITransform
           Const.indexOfString(input.getUniquenessStrategy().name(), UniquenessStrategy.getNames());
       wStrategy.select(idx);
     }
+    if (input.getCompressionFormat() != null) {
+      int idxbis =
+          Const.indexOfString(input.getCompressionFormat().name(), CompressionFormat.getNames());
+      wCompress.select(idxbis);
+    }
     wFilesPrefix.setText(Const.NVL(input.getFilesPrefix(), ""));
     wFilenameField.setText(Const.NVL(input.getFilenameField(), ""));
     wFileTypeField.setText(Const.NVL(input.getFileTypeField(), ""));
@@ -318,6 +342,7 @@ public class GenerateCsvDialog extends BaseTransformDialog implements ITransform
     meta.setGraphFieldName(wGraphField.getText());
     meta.setBaseFolder(wBaseFolder.getText());
     meta.setUniquenessStrategy(UniquenessStrategy.getStrategyFromName(wStrategy.getText()));
+    meta.setCompressionFormat(CompressionFormat.getCompressionFormat(wCompress.getText()));
     meta.setFilesPrefix(wFilesPrefix.getText());
     meta.setFilenameField(wFilenameField.getText());
     meta.setFileTypeField(wFileTypeField.getText());

@@ -43,6 +43,7 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
   public static final String GRAPH_FIELD_NAME = "graph_field_name";
   public static final String BASE_FOLDER = "base_folder";
   public static final String UNIQUENESS_STRATEGY = "uniqueness_strategy";
+  public static final String COMPRESSION_FORMAT = "compression_format";
   public static final String FILES_PREFIX = "files_prefix";
   public static final String FILENAME_FIELD = "filename_field";
   public static final String FILE_TYPE_FIELD = "file_type_field";
@@ -50,6 +51,7 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
   protected String graphFieldName;
   protected String baseFolder;
   protected UniquenessStrategy uniquenessStrategy;
+  protected CompressionFormat compressionFormat;
 
   protected String filesPrefix;
   protected String filenameField;
@@ -59,6 +61,7 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
   public void setDefault() {
     baseFolder = "/var/lib/neo4j/";
     uniquenessStrategy = UniquenessStrategy.None;
+    compressionFormat = CompressionFormat.None;
     filesPrefix = "prefix";
     filenameField = "filename";
     fileTypeField = "fileType";
@@ -92,6 +95,9 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
     xml.append(
         XmlHandler.addTagValue(
             UNIQUENESS_STRATEGY, uniquenessStrategy != null ? uniquenessStrategy.name() : null));
+    xml.append(
+        XmlHandler.addTagValue(
+            COMPRESSION_FORMAT, compressionFormat != null ? compressionFormat.name() : null));
     xml.append(XmlHandler.addTagValue(FILES_PREFIX, filesPrefix));
     xml.append(XmlHandler.addTagValue(FILENAME_FIELD, filenameField));
     xml.append(XmlHandler.addTagValue(FILE_TYPE_FIELD, fileTypeField));
@@ -106,6 +112,9 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
     uniquenessStrategy =
         UniquenessStrategy.getStrategyFromName(
             XmlHandler.getTagValue(transformNode, UNIQUENESS_STRATEGY));
+    compressionFormat =
+        CompressionFormat.getCompressionFormat(
+            XmlHandler.getTagValue(transformNode, COMPRESSION_FORMAT));
     filesPrefix = XmlHandler.getTagValue(transformNode, FILES_PREFIX);
     filenameField = XmlHandler.getTagValue(transformNode, FILENAME_FIELD);
     fileTypeField = XmlHandler.getTagValue(transformNode, FILE_TYPE_FIELD);
@@ -151,6 +160,20 @@ public class GenerateCsvMeta extends BaseTransformMeta<GenerateCsv, GenerateCsvD
   /** @param uniquenessStrategy The nodeUniquenessStrategy to set */
   public void setUniquenessStrategy(UniquenessStrategy uniquenessStrategy) {
     this.uniquenessStrategy = uniquenessStrategy;
+  }
+
+  /**
+   * Gets compression Format
+   *
+   * @return value of Compression Format
+   */
+  public CompressionFormat getCompressionFormat() {
+    return compressionFormat;
+  }
+
+  /** @param compressionFormat The Format variable to set */
+  public void setCompressionFormat(CompressionFormat compressionFormat) {
+    this.compressionFormat = compressionFormat;
   }
 
   /**

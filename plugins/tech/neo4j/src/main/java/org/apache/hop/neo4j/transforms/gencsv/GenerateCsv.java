@@ -210,7 +210,7 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         //
         String filename = calculateNodeFilename(propertySetKey);
         String shortFilename = calculateNodeShortFilename(propertySetKey);
-        csvFile = new CsvFile(filename, shortFilename, "Nodes");
+        csvFile = new CsvFile(filename, shortFilename, "Nodes", meta.getCompressionFormat());
         data.fileMap.put(propertySetKey, csvFile);
 
         try {
@@ -287,7 +287,7 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         //
         String filename = calculateRelatiohshipsFilename(propertySetKey);
         String shortFilename = calculateRelatiohshipsShortFilename(propertySetKey);
-        csvFile = new CsvFile(filename, shortFilename, "Relationships");
+        csvFile = new CsvFile(filename, shortFilename, "Relationships", meta.getCompressionFormat());
         data.fileMap.put(propertySetKey, csvFile);
 
         try {
@@ -363,7 +363,8 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         + propertySetKey
         + "-"
         + resolve("${" + Const.INTERNAL_VARIABLE_TRANSFORM_COPYNR + "}")
-        + ".csv";
+        + ".csv"
+        + (meta.compressionFormat == CompressionFormat.Zstd ? ".zst" : "");
   }
 
   private String calculateNodeFilename(String propertySetKey) {
@@ -373,7 +374,8 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         + propertySetKey
         + "-"
         + resolve("${" + Const.INTERNAL_VARIABLE_TRANSFORM_COPYNR + "}")
-        + ".csv";
+        + ".csv"
+        + (meta.compressionFormat == CompressionFormat.Zstd ? ".zst" : "");
   }
 
   private String calculateRelatiohshipsShortFilename(String propertySetKey) {
@@ -383,7 +385,8 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         + propertySetKey
         + "-"
         + resolve("${" + Const.INTERNAL_VARIABLE_TRANSFORM_COPYNR + "}")
-        + ".csv";
+        + ".csv"
+        + (meta.compressionFormat == CompressionFormat.Zstd ? ".zst" : "");
   }
 
   private String calculateRelatiohshipsFilename(String propertySetKey) {
@@ -393,7 +396,8 @@ public class GenerateCsv extends BaseTransform<GenerateCsvMeta, GenerateCsvData>
         + propertySetKey
         + "-"
         + resolve("${" + Const.INTERNAL_VARIABLE_TRANSFORM_COPYNR + "}")
-        + ".csv";
+        + ".csv"
+        + (meta.compressionFormat == CompressionFormat.Zstd ? ".zst" : "");
   }
 
   private void writeNodeCsvHeader(OutputStream os, List<IdType> props, String idFieldName)
