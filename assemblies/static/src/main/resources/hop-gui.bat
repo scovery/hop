@@ -58,7 +58,7 @@ if not "%HOP_JAVA_HOME%"=="" (
 
 REM # Settings for all OSses
 
-if "%HOP_OPTIONS%"=="" set HOP_OPTIONS=-Xmx2048m
+if "%HOP_OPTIONS%"=="" set HOP_OPTIONS=-Xmx20480m
 
 REM
 REM If the user passes in DEBUG as the first parameter, it starts Hop in debugger mode and opens port 5005
