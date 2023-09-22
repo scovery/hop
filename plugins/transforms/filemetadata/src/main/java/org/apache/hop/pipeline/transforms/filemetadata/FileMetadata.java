@@ -22,6 +22,9 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
+import org.apache.hop.core.compress.CompressionInputStream;
+import org.apache.hop.core.compress.CompressionProviderFactory;
+import org.apache.hop.core.compress.ICompressionProvider;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.exception.HopFileException;
 import org.apache.hop.core.exception.HopTransformException;
@@ -39,6 +42,7 @@ import org.apache.hop.pipeline.transforms.filemetadata.util.delimiters.Delimiter
 import org.apache.hop.pipeline.transforms.filemetadata.util.delimiters.DelimiterDetectorBuilder;
 import org.apache.hop.pipeline.transforms.filemetadata.util.encoding.EncodingDetector;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,6 +58,7 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
   private Object[] r;
   private Charset defaultCharset = StandardCharsets.ISO_8859_1;
   private long limitRows;
+  private static final int BUFFER_SIZE_INPUT_STREAM = 8192;
 
   /**
    * The constructor should simply pass on its arguments to the parent class.
@@ -163,6 +168,36 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
 
     return filename;
   }
+
+  public String getCompression(Object[] row) throws HopException {
+    String compression = null;
+    if (row == null) {
+      compression = variables.resolve(meta.getFileCompression());
+      if (compression == null) {
+        throw new HopFileException(
+            BaseMessages.getString(PKG, "FileMetadata.Exception.CompressionNotSet"));
+      }
+    } else {
+      int compressionFieldIndex = getInputRowMeta().indexOfValue(meta.getCompressionField());
+      if (compressionFieldIndex < 0) {
+        throw new HopTransformException(
+            BaseMessages.getString(
+                PKG,
+                "FileMetadata.Exception.CompressionFieldNotFound",
+                meta.getCompressionField()));
+      }
+      IValueMeta compressionMeta = getInputRowMeta().getValueMeta(compressionFieldIndex);
+      compression = variables.resolve(compressionMeta.getString(row[compressionFieldIndex]));
+
+      if (compression == null) {
+        throw new HopFileException(
+            BaseMessages.getString(PKG, "FileMetadata.Exception.CompressionNotSet"));
+      }
+    }
+
+    return compression;
+  }
+
   private void buildOutputRows() throws HopException {
 
     // which index does the next field go to
@@ -176,6 +211,7 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
 
     // get the configuration from the dialog
     String fileName = getOutputFileName((data.isReceivingInput && meta.isFilenameInField() ? r : null));
+    String compression = getCompression((data.isReceivingInput && meta.isFilenameInField() ? r : null));
 
     // if the file does not exist, just send an empty row
     try {
@@ -225,12 +261,12 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
     }
 
     // guess the charset
-    Charset detectedCharset = detectCharset(fileName);
+    Charset detectedCharset = detectCharset(fileName, compression);
     outputRow[idx++] = detectedCharset;
 
     // guess the delimiters
     DelimiterDetector.DetectionResult delimiters =
-        detectDelimiters(fileName, detectedCharset, delimiterCandidates, enclosureCandidates);
+        detectDelimiters(fileName, compression, detectedCharset, delimiterCandidates, enclosureCandidates);
 
     if (delimiters == null) {
       throw new HopTransformException(
@@ -254,9 +290,23 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
     long skipLines = delimiters.getBadHeaders();
     long dataLines = delimiters.getDataLines();
 
-    try (BufferedReader inputReader =
-        new BufferedReader(
-            new InputStreamReader(HopVfs.getInputStream(fileName), detectedCharset))) {
+    ICompressionProvider provider =
+        CompressionProviderFactory.getInstance()
+            .getCompressionProviderByName(compression);
+
+    if (log.isDetailed()) {
+      log.logDetailed(
+          "This is a compressed file being handled by the " + provider.getName() + " provider");
+    }
+
+    try (
+      CompressionInputStream in = provider.createInputStream(HopVfs.getInputStream(fileName));
+      BufferedInputStream inStream = new BufferedInputStream(in, BUFFER_SIZE_INPUT_STREAM);
+      InputStreamReader isr = new InputStreamReader(inStream);
+      BufferedReader inputReader = new BufferedReader(isr)
+    ) {
+      in.nextEntry();
+      
       while (skipLines > 0) {
         skipLines--;
         // Skip the line. There is no need to use a variable here.
@@ -361,8 +411,12 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
     }
   }
 
-  private Charset detectCharset(String fileName) {
-    try (InputStream stream = HopVfs.getInputStream(fileName)) {
+  private Charset detectCharset(String fileName, String compression) {
+    ICompressionProvider provider =
+      CompressionProviderFactory.getInstance()
+        .getCompressionProviderByName(compression);
+
+    try (CompressionInputStream stream = provider.createInputStream(HopVfs.getInputStream(fileName))) {
       return EncodingDetector.detectEncoding(
           stream, defaultCharset, limitRows * 500); // estimate a row is ~500 chars
     } catch (FileNotFoundException e) {
@@ -374,14 +428,27 @@ public class FileMetadata extends BaseTransform<FileMetadataMeta, FileMetadataDa
 
   private DelimiterDetector.DetectionResult detectDelimiters(
       String fileName,
+      String compression,
       Charset charset,
       ArrayList<Character> delimiterCandidates,
       ArrayList<Character> enclosureCandidates) {
 
     // guess the delimiters
 
-    try (BufferedReader f =
-        new BufferedReader(new InputStreamReader(HopVfs.getInputStream(fileName), charset))) {
+    ICompressionProvider provider =
+        CompressionProviderFactory.getInstance()
+            .getCompressionProviderByName(compression);
+
+    if (log.isDetailed()) {
+      log.logDetailed(
+          "This is a compressed file being handled by the " + provider.getName() + " provider");
+    }
+
+    try (
+      CompressionInputStream in = provider.createInputStream(HopVfs.getInputStream(fileName));
+      BufferedInputStream inStream = new BufferedInputStream(in, BUFFER_SIZE_INPUT_STREAM);
+      InputStreamReader isr = new InputStreamReader(inStream);
+      BufferedReader f = new BufferedReader(isr)) {
 
       DelimiterDetector detector =
           new DelimiterDetectorBuilder()

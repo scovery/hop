@@ -18,6 +18,7 @@
 package org.apache.hop.pipeline.transforms.filemetadata;
 
 import org.apache.hop.core.Const;
+import org.apache.hop.core.compress.CompressionProviderFactory;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.variables.IVariables;
@@ -25,6 +26,7 @@ import org.apache.hop.i18n.BaseMessages;
 import org.apache.hop.pipeline.PipelineMeta;
 import org.apache.hop.pipeline.transform.BaseTransformMeta;
 import org.apache.hop.pipeline.transform.ITransformDialog;
+import org.apache.hop.pipeline.transforms.filemetadata.FileMetadataMeta.FMCandidate;
 import org.apache.hop.ui.core.PropsUi;
 import org.apache.hop.ui.core.dialog.BaseDialog;
 import org.apache.hop.ui.core.dialog.ErrorDialog;
@@ -65,10 +67,17 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
   private Label wlFilename;
   private TextVar wFilename;
 
+  private Label wlCompression;
+  private CCombo wCompression;
+
   private Button wFileInField;
 
   private Label wlFilenameField;
   private CCombo wFilenameField;
+
+  private Label wlCompressionField;
+  private CCombo wCompressionField;
+
 
   private TableView wDelimiterCandidates;
   private TableView wEnclosureCandidates;
@@ -205,13 +214,41 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
     fdFilename.right = new FormAttachment(wbbFilename, -margin);
     wFilename.setLayoutData(fdFilename);
 
+    lastControl = wFilename;
+
+    // Compression type (None, Zip, GZip, Zstd...)
+    wlCompression = new Label(shell, SWT.RIGHT);
+    wlCompression.setText(BaseMessages.getString(PKG, "FileMetadata.Compression.Label"));
+    PropsUi.setLook(wlCompression);
+    FormData fdlCompression = new FormData();
+    fdlCompression.top = new FormAttachment(lastControl, margin);
+    fdlCompression.left = new FormAttachment(0, 0);
+    fdlCompression.right = new FormAttachment(middle, -margin);
+    wlCompression.setLayoutData(fdlCompression);
+
+    wCompression = new CCombo(shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+    wCompression.setText(BaseMessages.getString(PKG, "FileMetadata.Compression.Label"));
+    wCompression.setToolTipText(
+        BaseMessages.getString(PKG, "FileMetadata.Compression.Tooltip"));
+    PropsUi.setLook(wCompression);
+    wCompression.setItems(CompressionProviderFactory.getInstance().getCompressionProviderNames());
+
+    wCompression.addModifyListener(lsMod);
+    FormData fdCompression = new FormData();
+    fdCompression.top = new FormAttachment(lastControl, margin);
+    fdCompression.left = new FormAttachment(middle, 0);
+    fdCompression.right = new FormAttachment(100, 0);
+    wCompression.setLayoutData(fdCompression);
+
+    lastControl = wCompression;
+
     // Is Filename defined in a Field
     Label wlFileInField = new Label(shell, SWT.RIGHT);
     wlFileInField.setText(BaseMessages.getString(PKG, "FileMetadata.FileInField.Label"));
     PropsUi.setLook(wlFileInField);
     FormData fdlFileInField = new FormData();
     fdlFileInField.left = new FormAttachment(0, -margin);
-    fdlFileInField.top = new FormAttachment(wFilename, margin);
+    fdlFileInField.top = new FormAttachment(lastControl, margin);
     fdlFileInField.right = new FormAttachment(middle, -2 * margin);
     wlFileInField.setLayoutData(fdlFileInField);
 
@@ -226,7 +263,7 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
         new SelectionAdapter() {
           @Override
           public void widgetSelected(SelectionEvent arg0) {
-            activateFileField();
+            activateFileFields();
 
             meta.setChanged();
           }
@@ -253,6 +290,40 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
     fdFilenameField.right = new FormAttachment(100, -margin);
     wFilenameField.setLayoutData(fdFilenameField);
     wFilenameField.addFocusListener(
+            new FocusListener() {
+              @Override
+              public void focusLost(FocusEvent e) {}
+
+              @Override
+              public void focusGained(FocusEvent e) {
+                Cursor busy = new Cursor(shell.getDisplay(), SWT.CURSOR_WAIT);
+                shell.setCursor(busy);
+                getFields();
+                shell.setCursor(null);
+                busy.dispose();
+              }
+            });
+
+    // Compression field
+    wlCompressionField = new Label(shell, SWT.RIGHT);
+    wlCompressionField.setText(BaseMessages.getString(PKG, "FileMetadata.CompressionField.Label"));
+    PropsUi.setLook(wlCompressionField);
+    FormData fdlCompressionField = new FormData();
+    fdlCompressionField.left = new FormAttachment(0, -margin);
+    fdlCompressionField.top = new FormAttachment(wFilenameField, margin);
+    fdlCompressionField.right = new FormAttachment(middle, -2 * margin);
+    wlCompressionField.setLayoutData(fdlCompressionField);
+
+    wCompressionField = new CCombo(shell, SWT.BORDER | SWT.READ_ONLY);
+    wCompressionField.setEditable(true);
+    PropsUi.setLook(wCompressionField);
+    wCompressionField.addModifyListener(lsMod);
+    FormData fdCompressionField = new FormData();
+    fdCompressionField.left = new FormAttachment(middle, -margin);
+    fdCompressionField.top = new FormAttachment(wFilenameField, margin);
+    fdCompressionField.right = new FormAttachment(100, -margin);
+    wCompressionField.setLayoutData(fdCompressionField);
+    wCompressionField.addFocusListener(
             new FocusListener() {
               @Override
               public void focusLost(FocusEvent e) {}
@@ -423,18 +494,26 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
     return transformName;
   }
 
-  private void activateFileField() {
+  private void activateFileFields() {
 
     wlFilenameField.setEnabled(wFileInField.getSelection());
     wFilenameField.setEnabled(wFileInField.getSelection());
 
+    wlCompressionField.setEnabled(wFileInField.getSelection());
+    wCompressionField.setEnabled(wFileInField.getSelection());
+
     wlFilename.setEnabled(!wFileInField.getSelection());
     wFilename.setEnabled(!wFileInField.getSelection());
 
+    wlCompression.setEnabled(!wFileInField.getSelection());
+    wCompression.setEnabled(!wFileInField.getSelection());
+
     if (wFileInField.getSelection()) {
       wFilename.setText("");
+      wCompression.setText("");
     } else {
       wFilenameField.setText("");
+      wCompressionField.setText("");
     }
   }
 
@@ -444,10 +523,12 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
         getPreviousFields = true;
 
         wFilenameField.removeAll();
+        wCompressionField.removeAll();
 
         IRowMeta r = pipelineMeta.getPrevTransformFields(variables, transformName);
         if (r != null) {
           wFilenameField.setItems(r.getFieldNames());
+          wCompressionField.setItems(r.getFieldNames());
         }
       }
     } catch (HopException ke) {
@@ -468,11 +549,20 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
 
     wFilename.setText(Const.NVL(meta.getFileName(), ""));
 
+    if (meta.fileCompression != null) {
+      wCompression.setText(meta.fileCompression);
+    }
+
     wFileInField.setSelection(meta.isFilenameInField());
 
     if (meta.getFilenameField() != null) {
       wFilenameField.setText(meta.getFilenameField());
     }
+
+    if (meta.getCompressionField() != null) {
+      wCompressionField.setText(meta.getCompressionField());
+    }
+
     wLimit.setText(Const.NVL(meta.getLimitRows(), ""));
     wDefaultCharset.setText(Const.NVL(meta.getDefaultCharset(), ""));
 
@@ -504,8 +594,10 @@ public class FileMetadataDialog extends BaseTransformDialog implements ITransfor
     transformName = wTransformName.getText();
 
     meta.setFileName(wFilename.getText());
+    meta.setFileCompression(wCompression.getText());
     meta.setFilenameInField(wFileInField.getSelection());
     meta.setFilenameField(wFilenameField.getText());
+    meta.setCompressionField(wCompressionField.getText());
     meta.setLimitRows(wLimit.getText());
     meta.setDefaultCharset(wDefaultCharset.getText());
 

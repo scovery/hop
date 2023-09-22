@@ -18,6 +18,7 @@
 package org.apache.hop.pipeline.transforms.filemetadata;
 
 import org.apache.hop.core.annotations.Transform;
+import org.apache.hop.core.injection.Injection;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.RowMetaBuilder;
 import org.apache.hop.core.variables.IVariables;
@@ -55,6 +56,13 @@ public class FileMetadataMeta extends BaseTransformMeta<FileMetadata, FileMetada
   @HopMetadataProperty(key = "defaultCharset")
   private String defaultCharset;
 
+  @HopMetadataProperty(key = "fileCompression")
+  public String fileCompression;
+
+  @HopMetadataProperty(key = "compressionField")
+  private String compressionField;
+
+
   // candidates for delimiters in delimited files
   @HopMetadataProperty(key = "delimiterCandidate")
   private List<FMCandidate> delimiterCandidates;
@@ -90,9 +98,11 @@ public class FileMetadataMeta extends BaseTransformMeta<FileMetadata, FileMetada
   @Override
   public void setDefault() {
     fileName = "";
+    fileCompression = "None";
     limitRows = "10000";
     defaultCharset = "ISO-8859-1";
     filenameInField = false;
+    compressionField = "";
 
     delimiterCandidates.clear();
     delimiterCandidates.add(new FMCandidate("\t"));
@@ -195,6 +205,14 @@ public class FileMetadataMeta extends BaseTransformMeta<FileMetadata, FileMetada
     this.fileName = fileName;
   }
 
+  public String getFileCompression() {
+    return fileCompression;
+  }
+
+  public void setFileCompression(String fileCompression) {
+    this.fileCompression = fileCompression;
+  }
+
   public boolean isFilenameInField() {
     return filenameInField;
   }
@@ -209,6 +227,14 @@ public class FileMetadataMeta extends BaseTransformMeta<FileMetadata, FileMetada
 
   public void setFilenameField(String filenameField) {
     this.filenameField = filenameField;
+  }
+
+  public String getCompressionField() {
+    return compressionField;
+  }
+
+  public void setCompressionField(String compressionField) {
+    this.compressionField = compressionField;
   }
 
   /**
