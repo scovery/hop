@@ -1346,6 +1346,8 @@ public class TextFileOutputMeta extends BaseTransformMeta<TextFileOutput, TextFi
       }
       if ("GZip".equals(meta.getFileCompression())) {
         retval += ".gz";
+      } else if ("Zstd".equals(meta.getFileCompression())) {
+        retval += ".zst";
       }
     }
     return retval;
