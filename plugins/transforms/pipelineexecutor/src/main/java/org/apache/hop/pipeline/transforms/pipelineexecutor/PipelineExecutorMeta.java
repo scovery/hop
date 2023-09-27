@@ -27,6 +27,9 @@ import org.apache.hop.core.exception.HopPluginException;
 import org.apache.hop.core.exception.HopTransformException;
 import org.apache.hop.core.exception.HopXmlException;
 import org.apache.hop.core.file.IHasFilename;
+import org.apache.hop.core.injection.Injection;
+import org.apache.hop.core.injection.InjectionDeep;
+import org.apache.hop.core.injection.InjectionSupported;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.row.value.ValueMetaFactory;
@@ -55,6 +58,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Meta-data for the Pipeline Executor transform. */
+@InjectionSupported(
+    localizationPrefix = "PipelineExecutor.Injection.",
+    groups = {"GENERAL", "PARAMETERS", "EXECUTION_RESULTS", "ROW_GROUPING", "RESULT_ROWS", "RESULT_FILES"})
 @Transform(
     id = "PipelineExecutor",
     image = "ui/images/pipelineexecutor.svg",
@@ -74,34 +80,42 @@ public class PipelineExecutorMeta
   static final String F_EXECUTOR_OUTPUT_TRANSFORM = "executors_output_transform";
 
   /** The name of the pipeline run configuration with which we want to execute the pipeline. */
+  @Injection(name = "RUN_CONFIGURATION_NAME", group = "GENERAL")
   private String runConfigurationName;
 
   /** Flag that indicate that pipeline name is specified in a stream's field */
+  @Injection(name = "FILENAME_IN_FIELD", group = "GENERAL")
   private boolean filenameInField;
 
   /** Name of the field containing the pipeline file's name */
+  @Injection(name = "FILENAME_FIELD", group = "GENERAL")
   private String filenameField;
 
   /**
    * The number of input rows that are sent as result rows to the workflow in one go, defaults to
    * "1"
    */
+  @Injection(name = "GROUP_SIZE", group = "ROW_GROUPING")
   private String groupSize;
 
   /**
    * Optional name of a field to group rows together that are sent together to the workflow as
    * result rows (empty default)
    */
+  @Injection(name = "GROUP_FIELD", group = "ROW_GROUPING")
   private String groupField;
 
   /**
    * Optional time in ms that is spent waiting and accumulating rows before they are given to the
    * workflow as result rows (empty default, "0")
    */
+  @Injection(name = "GROUP_TIME", group = "ROW_GROUPING")
   private String groupTime;
 
+  @InjectionDeep
   private PipelineExecutorParameters parameters;
 
+  @Injection(name = "EXECUTION_RESULT_TARGET_TRANSFORM", group = "EXECUTION_RESULTS")
   private String executionResultTargetTransform;
 
   private TransformMeta executionResultTargetTransformMeta;
@@ -110,84 +124,96 @@ public class PipelineExecutorMeta
    * The optional name of the output field that will contain the execution time of the pipeline in
    * (Integer in ms)
    */
+  @Injection(name = "EXECUTION_TIME_FIELD", group = "EXECUTION_RESULTS")
   private String executionTimeField;
 
   /** The optional name of the output field that will contain the execution result (Boolean) */
+  @Injection(name = "EXECUTION_RESULT_FIELD", group = "EXECUTION_RESULTS")
   private String executionResultField;
 
   /** The optional name of the output field that will contain the number of errors (Integer) */
+  @Injection(name = "EXECUTION_NR_ERRORS_FIELD", group = "EXECUTION_RESULTS")
   private String executionNrErrorsField;
 
   /** The optional name of the output field that will contain the number of rows read (Integer) */
+  @Injection(name = "EXECUTION_LINES_READ_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesReadField;
 
   /**
    * The optional name of the output field that will contain the number of rows written (Integer)
    */
+  @Injection(name = "EXECUTION_LINES_WRITTEN_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesWrittenField;
 
   /** The optional name of the output field that will contain the number of rows input (Integer) */
+  @Injection(name = "EXECUTION_LINES_INPUT_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesInputField;
 
   /** The optional name of the output field that will contain the number of rows output (Integer) */
+  @Injection(name = "EXECUTION_LINES_OUTPUT_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesOutputField;
 
   /**
    * The optional name of the output field that will contain the number of rows rejected (Integer)
    */
+  @Injection(name = "EXECUTION_LINES_REJECTED_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesRejectedField;
 
   /**
    * The optional name of the output field that will contain the number of rows updated (Integer)
    */
+  @Injection(name = "EXECUTION_LINES_UPDATED_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesUpdatedField;
 
   /**
    * The optional name of the output field that will contain the number of rows deleted (Integer)
    */
+  @Injection(name = "EXECUTION_LINES_DELETED_FIELD", group = "EXECUTION_RESULTS")
   private String executionLinesDeletedField;
 
   /**
    * The optional name of the output field that will contain the number of files retrieved (Integer)
    */
+  @Injection(name = "EXECUTION_FILES_RETRIEVED_FIELD", group = "EXECUTION_RESULTS")
   private String executionFilesRetrievedField;
 
   /**
    * The optional name of the output field that will contain the exit status of the last executed
    * shell script (Integer)
    */
+  @Injection(name = "EXECUTION_EXIT_STATUS_FIELD", group = "EXECUTION_RESULTS")
   private String executionExitStatusField;
 
   /**
    * The optional name of the output field that will contain the log text of the pipeline execution
    * (String)
    */
+  @Injection(name = "EXECUTION_LOG_TEXT_FIELD", group = "EXECUTION_RESULTS")
   private String executionLogTextField;
 
   /**
    * The optional name of the output field that will contain the log channel ID of the pipeline
    * execution (String)
    */
+  @Injection(name = "EXECUTION_LOG_CHANNEL_ID_FIELD", group = "EXECUTION_RESULTS")
   private String executionLogChannelIdField;
 
   /** The optional transform to send the result rows to */
+  @Injection(name = "OUTPUT_ROWS_SOURCE_TRANSFORM", group = "RESULT_ROWS")
   private String outputRowsSourceTransform;
 
   private TransformMeta outputRowsSourceTransformMeta;
 
-  private String[] outputRowsField;
-
-  private int[] outputRowsType;
-
-  private int[] outputRowsLength;
-
-  private int[] outputRowsPrecision;
+  @InjectionDeep
+  public PipelineExecutorOutputRow[] outputRows;
 
   /** The optional transform to send the result files to */
+  @Injection(name = "RESULT_FILES_TARGET_TRANSFORM", group = "RESULT_FILES")
   private String resultFilesTargetTransform;
 
   private TransformMeta resultFilesTargetTransformMeta;
 
+  @Injection(name = "RESULT_FILES_FILE_NAME_FIELD", group = "RESULT_FILES")
   private String resultFilesFileNameField;
 
   /**
@@ -208,21 +234,21 @@ public class PipelineExecutorMeta
   }
 
   public void allocate(int nrFields) {
-    outputRowsField = new String[nrFields];
-    outputRowsType = new int[nrFields];
-    outputRowsLength = new int[nrFields];
-    outputRowsPrecision = new int[nrFields];
+    outputRows = new PipelineExecutorOutputRow[nrFields];
   }
 
   @Override
   public Object clone() {
     PipelineExecutorMeta retval = (PipelineExecutorMeta) super.clone();
-    int nrFields = outputRowsField.length;
-    retval.allocate(nrFields);
-    System.arraycopy(outputRowsField, 0, retval.outputRowsField, 0, nrFields);
-    System.arraycopy(outputRowsType, 0, retval.outputRowsType, 0, nrFields);
-    System.arraycopy(outputRowsLength, 0, retval.outputRowsLength, 0, nrFields);
-    System.arraycopy(outputRowsPrecision, 0, retval.outputRowsPrecision, 0, nrFields);
+    if (outputRows == null) {
+      retval.outputRows = null;
+    } else {
+      retval.outputRows = new PipelineExecutorOutputRow[outputRows.length];
+      for (int i = 0; i < outputRows.length; i++) {
+        retval.outputRows[i] = outputRows[i].clone();
+      }
+    }
+
     return retval;
   }
 
@@ -311,14 +337,14 @@ public class PipelineExecutorMeta
                 outputRowsSourceTransformMeta == null
                     ? null
                     : outputRowsSourceTransformMeta.getName()));
-    for (int i = 0; i < outputRowsField.length; i++) {
+    for (int i = 0; i < outputRows.length; i++) {
       retval.append("      ").append(XmlHandler.openTag("result_rows_field"));
-      retval.append(XmlHandler.addTagValue("name", outputRowsField[i], false));
+      retval.append(XmlHandler.addTagValue("name", outputRows[i].getName(), false));
       retval.append(
           XmlHandler.addTagValue(
-              "type", ValueMetaFactory.getValueMetaName(outputRowsType[i]), false));
-      retval.append(XmlHandler.addTagValue("length", outputRowsLength[i], false));
-      retval.append(XmlHandler.addTagValue("precision", outputRowsPrecision[i], false));
+              "type", ValueMetaFactory.getValueMetaName(outputRows[i].getType()), false));
+      retval.append(XmlHandler.addTagValue("length", outputRows[i].getLength(), false));
+      retval.append(XmlHandler.addTagValue("precision", outputRows[i].getPrecision(), false));
       retval.append(XmlHandler.closeTag("result_rows_field")).append(Const.CR);
     }
 
@@ -400,15 +426,16 @@ public class PipelineExecutorMeta
       int nrFields = XmlHandler.countNodes(transformNode, "result_rows_field");
       allocate(nrFields);
 
+      outputRows = new PipelineExecutorOutputRow[nrFields];
       for (int i = 0; i < nrFields; i++) {
-
         Node fieldNode = XmlHandler.getSubNodeByNr(transformNode, "result_rows_field", i);
 
-        outputRowsField[i] = XmlHandler.getTagValue(fieldNode, "name");
-        outputRowsType[i] =
-            ValueMetaFactory.getIdForValueMeta(XmlHandler.getTagValue(fieldNode, "type"));
-        outputRowsLength[i] = Const.toInt(XmlHandler.getTagValue(fieldNode, "length"), -1);
-        outputRowsPrecision[i] = Const.toInt(XmlHandler.getTagValue(fieldNode, "precision"), -1);
+        outputRows[i] = new PipelineExecutorOutputRow(
+          XmlHandler.getTagValue(fieldNode, "name"),
+          ValueMetaFactory.getIdForValueMeta(XmlHandler.getTagValue(fieldNode, "type")),
+          Const.toInt(XmlHandler.getTagValue(fieldNode, "length"), -1),
+          Const.toInt(XmlHandler.getTagValue(fieldNode, "precision"), -1)
+        );
       }
 
       resultFilesTargetTransform =
@@ -504,9 +531,9 @@ public class PipelineExecutorMeta
   }
 
   void prepareResultsRowsFields(IRowMeta row) throws HopTransformException {
-    for (int i = 0; i < outputRowsField.length; i++) {
+    for (int i = 0; i < outputRows.length; i++) {
       addFieldToRow(
-          row, outputRowsField[i], outputRowsType[i], outputRowsLength[i], outputRowsPrecision[i]);
+          row, outputRows[i].getName(), outputRows[i].getType(), outputRows[i].getLength(), outputRows[i].getPrecision());
     }
   }
 
@@ -982,38 +1009,6 @@ public class PipelineExecutorMeta
 
   public void setOutputRowsSourceTransformMeta(TransformMeta outputRowsSourceTransformMeta) {
     this.outputRowsSourceTransformMeta = outputRowsSourceTransformMeta;
-  }
-
-  public String[] getOutputRowsField() {
-    return outputRowsField;
-  }
-
-  public void setOutputRowsField(String[] outputRowsField) {
-    this.outputRowsField = outputRowsField;
-  }
-
-  public int[] getOutputRowsType() {
-    return outputRowsType;
-  }
-
-  public void setOutputRowsType(int[] outputRowsType) {
-    this.outputRowsType = outputRowsType;
-  }
-
-  public int[] getOutputRowsLength() {
-    return outputRowsLength;
-  }
-
-  public void setOutputRowsLength(int[] outputRowsLength) {
-    this.outputRowsLength = outputRowsLength;
-  }
-
-  public int[] getOutputRowsPrecision() {
-    return outputRowsPrecision;
-  }
-
-  public void setOutputRowsPrecision(int[] outputRowsPrecision) {
-    this.outputRowsPrecision = outputRowsPrecision;
   }
 
   public String getResultFilesTargetTransform() {

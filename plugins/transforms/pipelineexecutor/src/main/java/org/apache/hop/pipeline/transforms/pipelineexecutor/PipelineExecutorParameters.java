@@ -18,6 +18,7 @@
 package org.apache.hop.pipeline.transforms.pipelineexecutor;
 
 import org.apache.hop.core.Const;
+import org.apache.hop.core.injection.Injection;
 import org.apache.hop.core.xml.XmlHandler;
 import org.w3c.dom.Node;
 
@@ -32,11 +33,14 @@ public class PipelineExecutorParameters implements Cloneable {
   private static final String XML_VARIABLES_TAG = "variable_mapping";
 
   /** The name of the variable to set in the workflow */
+  @Injection(name = "PARAMETERS_VARIABLES", group = "PARAMETERS")
   private String[] variable;
 
+  @Injection(name = "PARAMETERS_FIELDS", group = "PARAMETERS")
   private String[] field;
 
   /** This is a simple String with optionally variables in them */
+  @Injection(name = "PARAMETERS_INPUTS", group = "PARAMETERS")
   private String[] input;
 
   /** This flag causes the workflow to inherit all variables from the parent pipeline */

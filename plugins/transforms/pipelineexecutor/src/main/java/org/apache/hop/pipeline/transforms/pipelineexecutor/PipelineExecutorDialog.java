@@ -557,14 +557,14 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
         pipelineExecutorMeta.getOutputRowsSourceTransformMeta() == null
             ? ""
             : pipelineExecutorMeta.getOutputRowsSourceTransformMeta().getName());
-    for (int i = 0; i < pipelineExecutorMeta.getOutputRowsField().length; i++) {
+    for (int i = 0; i < pipelineExecutorMeta.outputRows.length; i++) {
       TableItem item = new TableItem(wOutputFields.table, SWT.NONE);
-      item.setText(1, Const.NVL(pipelineExecutorMeta.getOutputRowsField()[i], ""));
+      item.setText(1, Const.NVL(pipelineExecutorMeta.outputRows[i].getName(), ""));
       item.setText(
-          2, ValueMetaFactory.getValueMetaName(pipelineExecutorMeta.getOutputRowsType()[i]));
-      int length = pipelineExecutorMeta.getOutputRowsLength()[i];
+          2, ValueMetaFactory.getValueMetaName(pipelineExecutorMeta.outputRows[i].getType()));
+      int length = pipelineExecutorMeta.outputRows[i].getLength();
       item.setText(3, length < 0 ? "" : Integer.toString(length));
-      int precision = pipelineExecutorMeta.getOutputRowsPrecision()[i];
+      int precision = pipelineExecutorMeta.outputRows[i].getPrecision();
       item.setText(4, precision < 0 ? "" : Integer.toString(precision));
     }
     wOutputFields.removeEmptyRows();
@@ -1137,8 +1137,8 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     wlOutputFields.setLayoutData(fdlResultFields);
 
     int nrRows =
-        (pipelineExecutorMeta.getOutputRowsField() != null
-            ? pipelineExecutorMeta.getOutputRowsField().length
+        (pipelineExecutorMeta.outputRows != null
+            ? pipelineExecutorMeta.outputRows.length
             : 1);
 
     ColumnInfo[] ciResultFields =
@@ -1328,19 +1328,15 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     pipelineExecutorMeta.setOutputRowsSourceTransformMeta(
         pipelineMeta.findTransform(wOutputRowsSource.getText()));
     int nrFields = wOutputFields.nrNonEmpty();
-    pipelineExecutorMeta.setOutputRowsField(new String[nrFields]);
-    pipelineExecutorMeta.setOutputRowsType(new int[nrFields]);
-    pipelineExecutorMeta.setOutputRowsLength(new int[nrFields]);
-    pipelineExecutorMeta.setOutputRowsPrecision(new int[nrFields]);
-
+    pipelineExecutorMeta.outputRows = new PipelineExecutorOutputRow[nrFields];
+    
     // CHECKSTYLE:Indentation:OFF
     for (int i = 0; i < nrFields; i++) {
       TableItem item = wOutputFields.getNonEmpty(i);
-      pipelineExecutorMeta.getOutputRowsField()[i] = item.getText(1);
-      pipelineExecutorMeta.getOutputRowsType()[i] =
-          ValueMetaFactory.getIdForValueMeta(item.getText(2));
-      pipelineExecutorMeta.getOutputRowsLength()[i] = Const.toInt(item.getText(3), -1);
-      pipelineExecutorMeta.getOutputRowsPrecision()[i] = Const.toInt(item.getText(4), -1);
+      pipelineExecutorMeta.outputRows[i].setName(item.getText(1));
+      pipelineExecutorMeta.outputRows[i].setType(ValueMetaFactory.getIdForValueMeta(item.getText(2)));
+      pipelineExecutorMeta.outputRows[i].setLength(Const.toInt(item.getText(3), -1));
+      pipelineExecutorMeta.outputRows[i].setPrecision(Const.toInt(item.getText(4), -1));
     }
   }
 }
