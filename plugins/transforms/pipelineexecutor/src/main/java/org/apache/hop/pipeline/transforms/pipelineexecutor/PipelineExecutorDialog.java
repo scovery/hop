@@ -1328,15 +1328,17 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     pipelineExecutorMeta.setOutputRowsSourceTransformMeta(
         pipelineMeta.findTransform(wOutputRowsSource.getText()));
     int nrFields = wOutputFields.nrNonEmpty();
-    pipelineExecutorMeta.outputRows = new PipelineExecutorOutputRow[nrFields];
-    
+
     // CHECKSTYLE:Indentation:OFF
+    pipelineExecutorMeta.outputRows = new PipelineExecutorOutputRow[nrFields];
     for (int i = 0; i < nrFields; i++) {
       TableItem item = wOutputFields.getNonEmpty(i);
-      pipelineExecutorMeta.outputRows[i].setName(item.getText(1));
-      pipelineExecutorMeta.outputRows[i].setType(ValueMetaFactory.getIdForValueMeta(item.getText(2)));
-      pipelineExecutorMeta.outputRows[i].setLength(Const.toInt(item.getText(3), -1));
-      pipelineExecutorMeta.outputRows[i].setPrecision(Const.toInt(item.getText(4), -1));
+      pipelineExecutorMeta.outputRows[i] = new PipelineExecutorOutputRow(
+        item.getText(1),
+        ValueMetaFactory.getIdForValueMeta(item.getText(2)),
+        Const.toInt(item.getText(3), -1),
+        Const.toInt(item.getText(4), -1)
+      );
     }
   }
 }
