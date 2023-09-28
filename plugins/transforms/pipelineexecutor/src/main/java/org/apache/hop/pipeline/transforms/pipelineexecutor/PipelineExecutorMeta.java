@@ -60,7 +60,7 @@ import java.util.List;
 /** Meta-data for the Pipeline Executor transform. */
 @InjectionSupported(
     localizationPrefix = "PipelineExecutor.Injection.",
-    groups = {"GENERAL", "PARAMETERS", "EXECUTION_RESULTS", "ROW_GROUPING", "RESULT_ROWS", "RESULT_FILES"})
+    groups = {"GENERAL", "PARAMETERS", "EXECUTION_RESULTS", "ROW_GROUPING", "RESULT_ROWS", "RESULT_FILES", "RAW_OUTPUT"})
 @Transform(
     id = "PipelineExecutor",
     image = "ui/images/pipelineexecutor.svg",
@@ -78,6 +78,9 @@ public class PipelineExecutorMeta
   static final String F_EXECUTION_RESULT_TARGET_TRANSFORM = "execution_result_target_transform";
   static final String F_RESULT_FILE_TARGET_TRANSFORM = "result_files_target_transform";
   static final String F_EXECUTOR_OUTPUT_TRANSFORM = "executors_output_transform";
+  static final String F_RAW_OUTPUT_SOURCE_TRANSFORM = "raw_output_source_transform";
+  static final String F_RAW_OUTPUT_TARGET_TRANSFORM = "raw_output_target_transform";
+
 
   /** The name of the pipeline run configuration with which we want to execute the pipeline. */
   @Injection(name = "RUN_CONFIGURATION_NAME", group = "GENERAL")
@@ -215,6 +218,16 @@ public class PipelineExecutorMeta
 
   @Injection(name = "RESULT_FILES_FILE_NAME_FIELD", group = "RESULT_FILES")
   private String resultFilesFileNameField;
+
+  /** The optional transform in executed pipeline to get raw output from */
+  @Injection(name = "RAW_OUTPUT_SOURCE_TRANSFORM", group = "RAW_OUTPUT")
+  private String rawOutputSourceTransform;
+
+  /** The optional transform in current pipeline to send the raw output to */
+  @Injection(name = "RAW_OUTPUT_TARGET_TRANSFORM", group = "RAW_OUTPUT")
+  private String rawOutputTargetTransform;
+
+  private TransformMeta rawOutputTargetTransformMeta;
 
   /**
    * These fields are related to executor transform's "basic" output stream, where a copy of input
@@ -369,6 +382,21 @@ public class PipelineExecutorMeta
                     ? null
                     : executorsOutputTransformMeta.getName()));
 
+    retval
+        .append("    ")
+        .append(
+            XmlHandler.addTagValue(
+                F_RAW_OUTPUT_SOURCE_TRANSFORM,
+                rawOutputSourceTransform));
+    retval
+        .append("    ")
+        .append(
+            XmlHandler.addTagValue(
+                F_RAW_OUTPUT_TARGET_TRANSFORM,
+                rawOutputTargetTransformMeta == null
+                    ? null
+                    : rawOutputTargetTransformMeta.getName()));
+
     return retval.toString();
   }
 
@@ -443,6 +471,9 @@ public class PipelineExecutorMeta
       resultFilesFileNameField =
           XmlHandler.getTagValue(transformNode, "result_files_file_name_field");
       executorsOutputTransform = XmlHandler.getTagValue(transformNode, F_EXECUTOR_OUTPUT_TRANSFORM);
+
+      rawOutputSourceTransform = XmlHandler.getTagValue(transformNode, F_RAW_OUTPUT_SOURCE_TRANSFORM);
+      rawOutputTargetTransform = XmlHandler.getTagValue(transformNode, F_RAW_OUTPUT_TARGET_TRANSFORM);
     } catch (Exception e) {
       throw new HopXmlException(
           BaseMessages.getString(
@@ -670,6 +701,13 @@ public class PipelineExecutorMeta
               BaseMessages.getString(PKG, "PipelineExecutorMeta.ExecutorOutputStream.Description"),
               StreamIcon.OUTPUT,
               null));
+      ioMeta.addStream(
+          new Stream(
+              StreamType.TARGET,
+              rawOutputTargetTransformMeta,
+              BaseMessages.getString(PKG, "PipelineExecutorMeta.RawOutputStream.Description"),
+              StreamIcon.OUTPUT,
+              null));
       setTransformIOMeta(ioMeta);
     }
     return ioMeta;
@@ -700,6 +738,10 @@ public class PipelineExecutorMeta
         break;
       case 3:
         setExecutorsOutputTransformMeta(transform);
+        break;
+      case 4:
+        setRawOutputTargetTransformMeta(transform);
+        break;
       default:
         break;
     }
@@ -719,6 +761,8 @@ public class PipelineExecutorMeta
         TransformMeta.findTransform(transforms, resultFilesTargetTransform);
     executorsOutputTransformMeta =
         TransformMeta.findTransform(transforms, executorsOutputTransform);
+    rawOutputTargetTransformMeta =
+        TransformMeta.findTransform(transforms, rawOutputTargetTransform);
   }
 
   @Override
@@ -1043,6 +1087,30 @@ public class PipelineExecutorMeta
     this.executorsOutputTransformMeta = executorsOutputTransformMeta;
   }
 
+  public String getRawOutputSourceTransform() {
+    return rawOutputSourceTransform;
+  }
+
+  public void setRawOutputSourceTransform(String rawOutputSourceTransform) {
+    this.rawOutputSourceTransform = rawOutputSourceTransform;
+  }
+
+  public String getRawOutputTargetTransform() {
+    return rawOutputTargetTransform;
+  }
+
+  public void setRawOutputTargetTransform(String rawOutputTargetTransform) {
+    this.rawOutputTargetTransform = rawOutputTargetTransform;
+  }
+
+  public TransformMeta getRawOutputTargetTransformMeta() {
+    return rawOutputTargetTransformMeta;
+  }
+
+  public void setRawOutputTargetTransformMeta(TransformMeta rawOutputTargetTransformMeta) {
+    this.rawOutputTargetTransformMeta = rawOutputTargetTransformMeta;
+  }
+
   @Override
   public boolean cleanAfterHopFromRemove() {
 
@@ -1050,6 +1118,7 @@ public class PipelineExecutorMeta
     setOutputRowsSourceTransformMeta(null);
     setResultFilesTargetTransformMeta(null);
     setExecutorsOutputTransformMeta(null);
+    setRawOutputTargetTransformMeta(null);
     return true;
   }
 
@@ -1078,7 +1147,12 @@ public class PipelineExecutorMeta
         && toTransformName.equals(getExecutorsOutputTransformMeta().getName())) {
       setExecutorsOutputTransformMeta(null);
       hasChanged = true;
+    } else if (getRawOutputTargetTransformMeta() != null
+        && toTransformName.equals(getRawOutputTargetTransformMeta().getName())) {
+      setRawOutputTargetTransformMeta(null);
+      hasChanged = true;
     }
+
     return hasChanged;
   }
 

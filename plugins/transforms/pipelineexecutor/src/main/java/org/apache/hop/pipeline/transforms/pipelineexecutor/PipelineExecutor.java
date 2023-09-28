@@ -24,6 +24,7 @@ import org.apache.hop.core.Result;
 import org.apache.hop.core.ResultFile;
 import org.apache.hop.core.RowMetaAndData;
 import org.apache.hop.core.exception.HopException;
+import org.apache.hop.core.exception.HopTransformException;
 import org.apache.hop.core.logging.HopLogStore;
 import org.apache.hop.core.logging.LoggingRegistry;
 import org.apache.hop.core.row.IRowMeta;
@@ -34,9 +35,11 @@ import org.apache.hop.i18n.BaseMessages;
 import org.apache.hop.pipeline.Pipeline;
 import org.apache.hop.pipeline.PipelineMeta;
 import org.apache.hop.pipeline.TransformWithMappingMeta;
+import org.apache.hop.pipeline.engine.IEngineComponent;
 import org.apache.hop.pipeline.engine.IPipelineEngine;
 import org.apache.hop.pipeline.engine.PipelineEngineFactory;
 import org.apache.hop.pipeline.transform.BaseTransform;
+import org.apache.hop.pipeline.transform.RowAdapter;
 import org.apache.hop.pipeline.transform.TransformMeta;
 
 import java.util.ArrayList;
@@ -252,6 +255,25 @@ public class PipelineExecutor extends BaseTransform<PipelineExecutorMeta, Pipeli
 
     try {
       executorPipeline.prepareExecution();
+
+      if (!Utils.isEmpty(meta.getRawOutputSourceTransform())) {
+        IEngineComponent transformInterface = executorPipeline
+            .findComponent(meta.getRawOutputSourceTransform(), 0);
+        if (transformInterface == null) {
+          throw new HopException(
+              "Unable to find transform '" + meta.getRawOutputSourceTransform() + "' to read from.");
+        }
+        transformInterface.addRowListener(
+            new RowAdapter() {
+              @Override
+              public void rowWrittenEvent(IRowMeta rowMeta, Object[] row)
+                  throws HopTransformException {
+                // Just pass along the data as output of this transform...
+                //
+                PipelineExecutor.this.putRow(rowMeta, row);
+              }
+            });
+      }
 
       // run pipeline
       executorPipeline.startThreads();

@@ -141,6 +141,9 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
 
   private TableView wOutputFields;
 
+  private CCombo wRawOutputSource;
+  private CCombo wRawOutputTarget;
+
   private boolean gotPreviousFields = false;
 
   private final int middle = props.getMiddlePct();
@@ -343,6 +346,7 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     addRowGroupTab();
     addResultRowsTab();
     addResultFilesTab();
+    addRawOutputTab();
 
     getData();
     pipelineExecutorMeta.setChanged(changed);
@@ -493,6 +497,7 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
       wExecutionResultTarget.setItems(prevTransforms);
       wResultFilesTarget.setItems(prevTransforms);
       wOutputRowsSource.setItems(prevTransforms);
+      wRawOutputTarget.setItems(prevTransforms);
 
       String[] inputFields =
           pipelineMeta.getPrevTransformFields(variables, transformMeta).getFieldNames();
@@ -501,6 +506,9 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     } catch (Exception e) {
       log.logError("couldn't get previous transform list", e);
     }
+
+    String[] sourceTransforms = getTransformsFromPipeline();
+    wRawOutputSource.setItems(sourceTransforms);
 
     wGroupSize.setText(Const.NVL(pipelineExecutorMeta.getGroupSize(), ""));
     wGroupTime.setText(Const.NVL(pipelineExecutorMeta.getGroupTime(), ""));
@@ -572,6 +580,9 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     wOutputFields.optWidth(true);
 
     wTabFolder.setSelection(0);
+
+    wRawOutputSource.setText(Const.NVL(pipelineExecutorMeta.getRawOutputSourceTransform(), ""));
+    wRawOutputTarget.setText(Const.NVL(pipelineExecutorMeta.getRawOutputTargetTransform(), ""));
 
     try {
       loadPipeline();
@@ -724,6 +735,25 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
               PKG, "PipelineExecutorDialog.ErrorLoadingSpecifiedPipeline.Message"),
           e);
     }
+  }
+
+  protected String[] getTransformsFromPipeline() {
+    try {
+      // Load the specified pipeline metadata in executorPipelineMeta
+      //
+      loadPipeline();
+      String[] transforms = executorPipelineMeta.getTransformNames();
+      Arrays.sort(transforms);
+      return transforms;
+    } catch (Exception e) {
+      new ErrorDialog(
+          shell,
+          BaseMessages.getString(PKG, "PipelineExecutorDialog.ErrorLoadingSpecifiedPipeline.Title"),
+          BaseMessages.getString(
+              PKG, "PipelineExecutorDialog.ErrorLoadingSpecifiedPipeline.Message"),
+          e);
+    }
+    return null;
   }
 
   protected void mapFieldsToPipelineParameters() {
@@ -1090,6 +1120,73 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     wTabFolder.setSelection(wTab);
   }
 
+  private void addRawOutputTab() {
+    final CTabItem wTab = new CTabItem(wTabFolder, SWT.NONE);
+    wTab.setFont(GuiResource.getInstance().getFontDefault());
+    wTab.setText(BaseMessages.getString(PKG, "PipelineExecutorDialog.RawOutput.Title"));
+    wTab.setToolTipText(BaseMessages.getString(PKG, "PipelineExecutorDialog.RawOutput.Tooltip"));
+
+    ScrolledComposite scrolledComposite =
+        new ScrolledComposite(wTabFolder, SWT.V_SCROLL | SWT.H_SCROLL);
+    scrolledComposite.setLayout(new FillLayout());
+
+    Composite wInputComposite = new Composite(scrolledComposite, SWT.NONE);
+    PropsUi.setLook(wInputComposite);
+
+    FormLayout tabLayout = new FormLayout();
+    tabLayout.marginWidth = 15;
+    tabLayout.marginHeight = 15;
+    wInputComposite.setLayout(tabLayout);
+
+    Label wlRawOutputSource = new Label(wInputComposite, SWT.RIGHT);
+    PropsUi.setLook(wlRawOutputSource);
+    wlRawOutputSource.setText(
+        BaseMessages.getString(PKG, "PipelineExecutorDialog.RawOutputSource.Label"));
+    FormData fdlRawOutputSource = new FormData();
+    fdlRawOutputSource.top = new FormAttachment(0, 0);
+    fdlRawOutputSource.left = new FormAttachment(0, 0);
+    fdlRawOutputSource.right = new FormAttachment(middle, -margin);
+    wlRawOutputSource.setLayoutData(fdlRawOutputSource);
+
+    wRawOutputSource = new CCombo(wInputComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+    PropsUi.setLook(wRawOutputSource);
+    FormData fdRawOutputSource = new FormData();
+    fdRawOutputSource.width = 250;
+    fdRawOutputSource.top = new FormAttachment(wlRawOutputSource, 0, SWT.CENTER);
+    fdRawOutputSource.left = new FormAttachment(wlRawOutputSource, margin);
+    wRawOutputSource.setLayoutData(fdRawOutputSource);
+
+    Label wlRawOutputTarget = new Label(wInputComposite, SWT.RIGHT);
+    PropsUi.setLook(wlRawOutputTarget);
+    wlRawOutputTarget.setText(
+        BaseMessages.getString(PKG, "PipelineExecutorDialog.RawOutputTarget.Label"));
+    FormData fdlRawOutputTarget = new FormData();
+    fdlRawOutputTarget.top = new FormAttachment(wRawOutputSource, 10);
+    fdlRawOutputTarget.left = new FormAttachment(0, 0);
+    fdlRawOutputTarget.right = new FormAttachment(middle, -margin);
+    wlRawOutputTarget.setLayoutData(fdlRawOutputTarget);
+
+    wRawOutputTarget = new CCombo(wInputComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+    PropsUi.setLook(wRawOutputTarget);
+    FormData fdRawOutputTarget = new FormData();
+    fdRawOutputTarget.width = 250;
+    fdRawOutputTarget.top = new FormAttachment(wlRawOutputTarget, 0, SWT.CENTER);
+    fdRawOutputTarget.left = new FormAttachment(wlRawOutputTarget, margin);
+    wRawOutputTarget.setLayoutData(fdRawOutputTarget);
+
+    wInputComposite.pack();
+    Rectangle bounds = wInputComposite.getBounds();
+
+    scrolledComposite.setContent(wInputComposite);
+    scrolledComposite.setExpandHorizontal(true);
+    scrolledComposite.setExpandVertical(true);
+    scrolledComposite.setMinWidth(bounds.width);
+    scrolledComposite.setMinHeight(bounds.height);
+
+    wTab.setControl(scrolledComposite);
+    wTabFolder.setSelection(wTab);
+  }
+
   private void addResultRowsTab() {
 
     final CTabItem wTab = new CTabItem(wTabFolder, SWT.NONE);
@@ -1340,5 +1437,8 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
         Const.toInt(item.getText(4), -1)
       );
     }
+
+    pipelineExecutorMeta.setRawOutputSourceTransform(wRawOutputSource.getText());
+    pipelineExecutorMeta.setRawOutputTargetTransform(wRawOutputTarget.getText());
   }
 }
