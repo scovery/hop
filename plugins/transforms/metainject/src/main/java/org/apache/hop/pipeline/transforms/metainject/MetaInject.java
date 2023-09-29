@@ -138,6 +138,11 @@ public class MetaInject extends BaseTransform<MetaInjectMeta, MetaInjectData> {
       }
     }
 
+    String targetFile = resolve(meta.getTargetFile());
+    if (!Utils.isEmpty(targetFile)) {
+      writeInjectedHpl(targetFile);
+    }
+
     if (!meta.isNoExecution()) {
       // Now we can execute this modified transformation metadata.
       //
@@ -248,10 +253,6 @@ public class MetaInject extends BaseTransform<MetaInjectMeta, MetaInjectData> {
     if (log.isDetailed()) {
       logDetailed("XML of transformation after injection: " + data.pipelineMeta.getXml(this));
     }
-    String targetFile = resolve(meta.getTargetFile());
-    if (!Utils.isEmpty(targetFile)) {
-      writeInjectedHpl(targetFile);
-    }
 
     // All done!
 
@@ -290,18 +291,13 @@ public class MetaInject extends BaseTransform<MetaInjectMeta, MetaInjectData> {
     return lpe;
   }
 
-  private void writeInjectedHpl(String targetFilPath) throws HopException {
-
-    writeInjectedHplToFs(targetFilPath);
-  }
-
   /**
    * Writes the generated meta injection transformation to the file system.
    *
    * @param targetFilePath the filesystem path to which to save the generated injection hpl
    * @throws HopException
    */
-  private void writeInjectedHplToFs(String targetFilePath) throws HopException {
+  private void writeInjectedHpl(String targetFilePath) throws HopException {
 
     OutputStream os = null;
     try {
