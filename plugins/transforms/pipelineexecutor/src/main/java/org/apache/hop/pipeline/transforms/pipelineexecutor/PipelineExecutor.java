@@ -215,6 +215,24 @@ public class PipelineExecutor extends BaseTransform<PipelineExecutorMeta, Pipeli
       pipelineExecutorData.groupFieldMeta =
               getInputRowMeta().getValueMeta(pipelineExecutorData.groupFieldIndex);
     }
+
+    // Raw output
+    /*
+    if (!Utils.isEmpty(meta.getRawOutputSourceTransform())) {
+      IEngineComponent transformInterface = pipelineExecutorData.getExecutorPipeline().findComponent(meta.getRawOutputSourceTransform(), 0);
+      if (transformInterface == null) {
+        throw new HopException(
+            "Unable to find transform '" + meta.getRawOutputSourceTransform() + "' to read from.");
+      }
+      pipelineExecutorData.setRawOutputRowMeta(new RowMeta());
+    }
+     */
+    pipelineExecutorData.setRawOutputRowMeta(new RowMeta());
+    if (meta.getRawOutputSourceTransform() != null) {
+      //meta.prepareResultsRowsFields(pipelineExecutorData.getResultRowsOutputRowMeta());
+      pipelineExecutorData.setRawOutputRowSet(
+              findOutputRowSet(meta.getRawOutputTargetTransform()));
+    }
   }
 
   private void executePipeline(List<String> incomingFieldValues) throws HopException {
@@ -257,8 +275,7 @@ public class PipelineExecutor extends BaseTransform<PipelineExecutorMeta, Pipeli
       executorPipeline.prepareExecution();
 
       if (!Utils.isEmpty(meta.getRawOutputSourceTransform())) {
-        IEngineComponent transformInterface = executorPipeline
-            .findComponent(meta.getRawOutputSourceTransform(), 0);
+        IEngineComponent transformInterface = executorPipeline.findComponent(meta.getRawOutputSourceTransform(), 0);
         if (transformInterface == null) {
           throw new HopException(
               "Unable to find transform '" + meta.getRawOutputSourceTransform() + "' to read from.");
@@ -270,7 +287,7 @@ public class PipelineExecutor extends BaseTransform<PipelineExecutorMeta, Pipeli
                   throws HopTransformException {
                 // Just pass along the data as output of this transform...
                 //
-                PipelineExecutor.this.putRow(rowMeta, row);
+                putRowTo(rowMeta, row, getData().getRawOutputRowSet());
               }
             });
       }
