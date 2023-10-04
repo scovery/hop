@@ -286,8 +286,10 @@ public class PipelineExecutor extends BaseTransform<PipelineExecutorMeta, Pipeli
               public void rowWrittenEvent(IRowMeta rowMeta, Object[] row)
                   throws HopTransformException {
                 // Just pass along the data as output of this transform...
-                //
-                putRowTo(rowMeta, row, getData().getRawOutputRowSet());
+                if (log.isDebug()) {
+                  logDebug("Copy {0} outputting row {1};{2}", getCopy(), row[0], row[1]);
+                }
+                putRowTo(rowMeta.clone(), row, getData().getRawOutputRowSet());
               }
             });
       }
