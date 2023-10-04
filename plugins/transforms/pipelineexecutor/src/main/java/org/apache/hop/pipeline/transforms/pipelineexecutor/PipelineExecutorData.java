@@ -38,6 +38,7 @@ public class PipelineExecutorData extends BaseTransformData implements ITransfor
   private IRowMeta resultRowsOutputRowMeta;
   private IRowMeta executionResultsOutputRowMeta;
   private IRowMeta resultFilesOutputRowMeta;
+  private IRowMeta rawOutputRowMeta;
 
   public List<RowMetaAndData> groupBuffer;
   public int groupSize;
@@ -54,6 +55,7 @@ public class PipelineExecutorData extends BaseTransformData implements ITransfor
   private IRowSet resultRowsRowSet;
   private IRowSet resultFilesRowSet;
   private IRowSet executionResultRowSet;
+  private IRowSet rawOutputRowSet;
 
   public PipelineExecutorData() {
     super();
@@ -121,6 +123,14 @@ public class PipelineExecutorData extends BaseTransformData implements ITransfor
     this.resultFilesOutputRowMeta = resultFilesOutputRowMeta;
   }
 
+  public IRowMeta getRawOutputRowMeta() {
+    return rawOutputRowMeta;
+  }
+
+  public void setRawOutputRowMeta(IRowMeta rawOutputRowMeta) {
+    this.rawOutputRowMeta = rawOutputRowMeta;
+  }
+
   public IRowSet getExecutorTransformOutputRowSet() {
     return executorTransformOutputRowSet;
   }
@@ -151,5 +161,13 @@ public class PipelineExecutorData extends BaseTransformData implements ITransfor
 
   public void setExecutionResultRowSet(IRowSet executionResultRowSet) {
     this.executionResultRowSet = executionResultRowSet;
+  }
+
+  public IRowSet getRawOutputRowSet() {
+    return rawOutputRowSet;
+  }
+
+  public void setRawOutputRowSet(IRowSet rawOutputRowSet) {
+    this.rawOutputRowSet = rawOutputRowSet;
   }
 }

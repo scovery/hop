@@ -508,7 +508,9 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
     }
 
     String[] sourceTransforms = getTransformsFromPipeline();
-    wRawOutputSource.setItems(sourceTransforms);
+    if (sourceTransforms != null) {
+      wRawOutputSource.setItems(sourceTransforms);
+    }
 
     wGroupSize.setText(Const.NVL(pipelineExecutorMeta.getGroupSize(), ""));
     wGroupTime.setText(Const.NVL(pipelineExecutorMeta.getGroupTime(), ""));
@@ -742,9 +744,13 @@ public class PipelineExecutorDialog extends BaseTransformDialog implements ITran
       // Load the specified pipeline metadata in executorPipelineMeta
       //
       loadPipeline();
-      String[] transforms = executorPipelineMeta.getTransformNames();
-      Arrays.sort(transforms);
-      return transforms;
+      if (executorPipelineMeta != null) {
+        String[] transforms = executorPipelineMeta.getTransformNames();
+        Arrays.sort(transforms);
+        return transforms;
+      } else {
+        return null;
+      }
     } catch (Exception e) {
       new ErrorDialog(
           shell,
