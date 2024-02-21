@@ -44,7 +44,7 @@
 
     <properties>
         <neo4j.driver.version>4.4.12</neo4j.driver.version>
-        <zstandard.version>1.24.0</zstandard.version>
+        <zstandard.version>1.26.0</zstandard.version>
     </properties>
 
     <repositories>
